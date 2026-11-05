@@ -1,0 +1,19 @@
+# Ferramenta original (referência interna, nunca publicar)
+legado/
+
+# Dependências e builds
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Configuração de marca interna (só a genérica vai para o repositório)
+apps/web/public/config/marca.local.json
+
+# Sistema e editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
