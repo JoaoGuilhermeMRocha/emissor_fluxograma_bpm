@@ -81,10 +81,16 @@ describe('layout em camadas com raias', () => {
 
   it('posição manual sobrepõe a automática', () => {
     const q = structuredClone(p);
-    q.layout.posicoes.E05 = { x: 1000, y: 300 };
-    const n = calcularLayout(q).nos.find((x) => x.id === 'E05')!;
+    q.layout.posicoes.E05 = { x: 1000, y: 60 };
+    const lq = calcularLayout(q);
+    const n = lq.nos.find((x) => x.id === 'E05')!;
+    const raia = lq.raias.find((r) => r.nome === n.raia)!;
     expect(n.x + n.w / 2).toBe(1000);
-    expect(n.y + n.h / 2).toBe(300);
+    expect(n.y + n.h / 2).toBe(raia.y + 60); // relativo ao topo da raia
+    // fora da raia: fica preso dentro dela
+    q.layout.posicoes.E05 = { x: 1000, y: 9999 };
+    const n2 = calcularLayout(q).nos.find((x) => x.id === 'E05')!;
+    expect(n2.y + n2.h).toBeLessThanOrEqual(raia.y + raia.h);
   });
 });
 
@@ -148,6 +154,16 @@ describe('exportação BPMN 2.0', () => {
     expect(porId.E05.$type).toBe('bpmn:IntermediateThrowEvent');
     expect(porId.E06.eventDefinitions[0].$type).toBe('bpmn:LinkEventDefinition');
     expect(porId.E07.documentation[0].text).toBe('Resultado: Cancelado');
+  });
+
+  it('tema escuro: cores de linha, fundo e texto continuam gerando XML válido', async () => {
+    const p = processoExemplo(fixo);
+    p.etapas.push({ id: 'E10', tipo: 'anotacao', descricao: 'Nota', anotaEtapa: 'E03', saidas: [] });
+    const xml = exportarBpmn(p, { corLinha: '#9AA4B2', corFundoPiscina: '#141920', corTexto: '#E6E9EE', cores: { tarefa: { fundo: '#172A46', borda: '#60A5FA' } } });
+    const { warnings } = await moddle.fromXML(xml);
+    expect(warnings).toEqual([]);
+    expect(xml).toContain('bpmnElement="Participant_1" isHorizontal="true" color:background-color="#141920" color:border-color="#9AA4B2"');
+    expect(xml).toMatch(/bpmnElement="Flow_E04_1" color:border-color="#9AA4B2">[\s\S]*?color:color="#E6E9EE"/);
   });
 
   it('processo vazio também gera XML válido', async () => {

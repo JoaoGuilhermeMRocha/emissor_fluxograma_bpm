@@ -72,7 +72,10 @@ function grafoDoProcesso(
   const raiaDoNo = new Map<string, string>();
   raiasFolha(((processo.laneSets ?? []) as ElementoModdle[]).flatMap((ls) => (ls.lanes ?? []) as ElementoModdle[])).forEach(
     ({ lane, nome }, ordem) => {
-      g.raias.push({ id: lane.id!, nome: nome || `Raia ${ordem + 1}`, ordem });
+      const raia: GrafoImportado['raias'][number] = { id: lane.id!, nome: nome || `Raia ${ordem + 1}`, ordem };
+      const caixaRaia = caixas.get(lane.id!);
+      if (caixaRaia) raia.caixa = caixaRaia;
+      g.raias.push(raia);
       for (const ref of (lane.flowNodeRef ?? []) as ElementoModdle[]) raiaDoNo.set(ref.id!, lane.id!);
     },
   );

@@ -5,6 +5,8 @@
   "scripts": {
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "bancada": "pnpm --filter @mapeador/bancada dev"
+    "bancada": "pnpm --filter @mapeador/bancada dev",
+    "web": "pnpm --filter @mapeador/web dev",
+    "build": "pnpm --filter @mapeador/web build"
   }
 }

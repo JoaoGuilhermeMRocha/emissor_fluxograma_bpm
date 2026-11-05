@@ -5,12 +5,13 @@
  */
 import { FORMATO, lerProcesso, type ResultadoLeitura } from '../arquivo/arquivo';
 import { importadorBpmn } from './bpmn';
+import { importadorFluidSvg } from './fluid-svg';
 import type { GrafoImportado, Importador } from './grafo-importado';
 import { importadorPlanilha } from './planilha';
 
-export const IMPORTADORES: readonly Importador[] = [importadorBpmn, importadorPlanilha];
+export const IMPORTADORES: readonly Importador[] = [importadorBpmn, importadorPlanilha, importadorFluidSvg];
 
-export const LIMITE_ARQUIVO = 20 * 1024 * 1024;
+export const LIMITE_ARQUIVO = 40 * 1024 * 1024; // SVG do Fluid pode passar de 20 MB
 
 /** Extensões aceitas no seletor de arquivos. */
 export const EXTENSOES_ACEITAS = ['.processo', ...new Set(IMPORTADORES.flatMap((i) => i.extensoes))];
@@ -34,7 +35,7 @@ export function candidatos(nome: string, bytes: Uint8Array): { importador: Impor
 }
 
 export async function abrirArquivo(nome: string, bytes: Uint8Array, formatoForcado?: string): Promise<ResultadoAbertura> {
-  if (bytes.length > LIMITE_ARQUIVO) return { tipo: 'erro', erro: 'Arquivo maior que 20 MB' };
+  if (bytes.length > LIMITE_ARQUIVO) return { tipo: 'erro', erro: 'Arquivo maior que 40 MB' };
   if (!formatoForcado && pareceProcesso(nome, bytes)) {
     return { tipo: 'processo', leitura: lerProcesso(new TextDecoder('utf-8').decode(bytes)) };
   }

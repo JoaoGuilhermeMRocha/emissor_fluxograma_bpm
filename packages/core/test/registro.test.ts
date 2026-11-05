@@ -22,6 +22,6 @@ describe('abrir arquivo com detecção de formato', () => {
     expect(await abrirArquivo('foto.png', new Uint8Array([0x89, 0x50, 0x4e, 0x47]))).toMatchObject({ tipo: 'erro', erro: expect.stringContaining('Formato não reconhecido') });
     expect(await abrirArquivo('ruim.bpmn', bytes('<bpmn:definitions'))).toMatchObject({ tipo: 'erro', erro: expect.stringContaining('Não foi possível ler o BPMN') });
     expect(await abrirArquivo('x.csv', bytes('a;b\n1;2'))).toMatchObject({ tipo: 'erro', erro: expect.stringContaining('cabeçalho') });
-    expect(EXTENSOES_ACEITAS).toEqual(['.processo', '.bpmn', '.xml', '.csv', '.xlsx', '.txt']);
+    expect(EXTENSOES_ACEITAS).toEqual(['.processo', '.bpmn', '.xml', '.csv', '.xlsx', '.txt', '.svg']);
   });
 });

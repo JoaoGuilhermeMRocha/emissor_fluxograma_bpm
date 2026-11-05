@@ -12,7 +12,7 @@ export type Severidade = 'erro' | 'aviso' | 'info';
 
 export type CodigoProblema =
   | 'V01' | 'V02' | 'V03' | 'V04' | 'V05' | 'V06' | 'V07' | 'V08'
-  | 'V09' | 'V10' | 'V11' | 'V12' | 'V13' | 'V14' | 'V15' | 'V16' | 'V17';
+  | 'V09' | 'V10' | 'V11' | 'V12' | 'V13' | 'V14' | 'V15' | 'V16' | 'V17' | 'V18';
 
 export interface Problema {
   codigo: CodigoProblema;
@@ -24,7 +24,7 @@ export interface Problema {
 export const SEVERIDADE: Record<CodigoProblema, Severidade> = {
   V01: 'erro', V02: 'erro', V03: 'erro', V04: 'erro', V05: 'erro', V06: 'erro', V07: 'erro',
   V08: 'erro', V09: 'aviso', V10: 'aviso', V11: 'aviso', V12: 'aviso', V13: 'aviso',
-  V14: 'aviso', V15: 'aviso', V16: 'info', V17: 'erro',
+  V14: 'aviso', V15: 'aviso', V16: 'info', V17: 'erro', V18: 'aviso',
 };
 
 const ORDEM_SEVERIDADE: Record<Severidade, number> = { erro: 0, aviso: 1, info: 2 };
@@ -84,6 +84,9 @@ export function validar(p: Processo): Problema[] {
         ? `${e.id} (${def.rotulo}) não pode ter saída`
         : `${e.id} (${def.rotulo}) só pode ter ${def.saidasMax} saída (tem ${preenchidas.length})`, e.id);
     }
+
+    const repetidos = preenchidas.map((s) => s.destino).filter((d, i, todos) => todos.indexOf(d) !== i);
+    for (const d of new Set(repetidos)) add('V18', `${e.id} tem mais de uma saída para ${d}`, e.id);
 
     if (e.tipo === 'gw_evento') {
       for (const s of preenchidas) {

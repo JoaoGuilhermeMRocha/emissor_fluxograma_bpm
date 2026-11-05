@@ -7,7 +7,7 @@ import { criarProcesso, formatarIdEtapa, type OpcoesCriacao } from '../modelo/fa
 import { ID_ETAPA, type Etapa, type Processo, type Saida } from '../modelo/schema';
 import { DEFINICOES, RESULTADOS_FIM, type TipoEtapa } from '../modelo/tipos';
 import { normalizarCampos } from '../regras/edicao';
-import { resolverRaias } from '../regras/raias';
+import { simplificarAtoresDeFim } from '../regras/raias';
 import { chaveNome, limparTexto } from '../util/texto';
 import { validar, type Problema } from '../validacao/validar';
 import type { FormaImportada, GrafoImportado, NoImportado } from './grafo-importado';
@@ -30,7 +30,7 @@ export interface RelatorioImportacao {
   problemas: Problema[];
 }
 
-const FORMA_PARA_TIPO: Record<FormaImportada, TipoEtapa> = {
+export const FORMA_PARA_TIPO: Record<FormaImportada, TipoEtapa> = {
   inicio: 'inicio',
   fim: 'fim',
   tarefa: 'tarefa',
@@ -232,15 +232,14 @@ export function normalizarGrafo(
   };
   if (canonica.size) processo.layout.ordemRaias = [...new Set(nomeRaia.values())];
 
-  // Eventos de fim: o responsável é opcional; só fica se for diferente da raia que já herdariam
-  for (const e of processo.etapas) {
-    if (e.tipo !== 'fim' || !e.ator) continue;
-    const ator = e.ator;
-    delete e.ator;
-    if (resolverRaias(processo).get(e.id) !== ator) e.ator = ator;
-  }
+  simplificarAtoresDeFim(processo);
   if (opcoes.manterLayout) {
-    for (const n of ordem) if (n.caixa) processo.layout.posicoes[novoId.get(n.id)!] = { x: n.caixa.x, y: n.caixa.y };
+    // Centro da etapa; y relativo ao topo da raia de origem (só quando a raia tem coordenadas)
+    const caixaRaia = new Map(g.raias.filter((r) => r.caixa).map((r) => [r.id, r.caixa!]));
+    for (const n of ordem) {
+      const cr = n.raiaId ? caixaRaia.get(n.raiaId) : undefined;
+      if (n.caixa && cr) processo.layout.posicoes[novoId.get(n.id)!] = { x: n.caixa.x + n.caixa.w / 2, y: n.caixa.y + n.caixa.h / 2 - cr.y };
+    }
   }
 
   // 6. Sugestões (nunca aplicadas em silêncio)

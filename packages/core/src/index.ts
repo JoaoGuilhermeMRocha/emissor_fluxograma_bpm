@@ -20,3 +20,5 @@ export * from './planilha/csv';
 export * from './planilha/xlsx';
 export * from './importacao/planilha';
 export * from './importacao/registro';
+export * from './diagrama/mesclar';
+export * from './importacao/fluid-svg';

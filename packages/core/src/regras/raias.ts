@@ -92,3 +92,17 @@ export function ordemDasRaias(p: Processo, raias: Map<string, string> = resolver
   for (const r of naturais) if (!ordem.includes(r)) ordem.push(r);
   return ordem;
 }
+
+/**
+ * Eventos de fim: o responsável é opcional e só serve para definir a raia.
+ * Remove (no próprio objeto) o responsável que coincide com a raia que o
+ * evento já herdaria de quem aponta para ele.
+ */
+export function simplificarAtoresDeFim(p: Processo): void {
+  for (const e of p.etapas) {
+    if (e.tipo !== 'fim' || !e.ator) continue;
+    const ator = e.ator;
+    delete e.ator;
+    if (resolverRaias(p).get(e.id) !== ator) e.ator = ator;
+  }
+}

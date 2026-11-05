@@ -79,6 +79,12 @@ describe('validar', () => {
     expect(c).toContain('V14:E02');
   });
 
+  it('saídas repetidas para o mesmo destino', () => {
+    const p = processoExemplo(fixo);
+    p.etapas[3]!.saidas.push({ destino: 'E05' });
+    expect(codigos(p)).toContain('V18:E04');
+  });
+
   it('ordena por severidade', () => {
     const p = processoExemplo(fixo);
     p.etapas.push({ id: 'E10', tipo: 'anotacao', descricao: 'Nota', saidas: [] });

@@ -156,7 +156,8 @@ export function calcularLayout(p: Processo): LayoutCalculado {
     const meioUtil = cr.y + (cr.h - MEDIDAS.canalRetorno) / 2;
     const cy = meioUtil + (s - (k - 1) / 2) * MEDIDAS.linha;
     const manual = p.layout.posicoes[id];
-    const centro = manual ?? { x: cx, y: cy };
+    const limiteY = (y: number) => Math.min(Math.max(y, h / 2 + 4), cr.h - h / 2 - 4);
+    const centro = manual ? { x: manual.x, y: cr.y + limiteY(manual.y) } : { x: cx, y: cy };
     return { id, tipo: e.tipo, raia, coluna: coluna.get(id)!, x: Math.round(centro.x - w / 2), y: Math.round(centro.y - h / 2), w, h };
   });
   const no = new Map(nos.map((n) => [n.id, n]));

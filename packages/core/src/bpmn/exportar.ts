@@ -33,6 +33,10 @@ export interface OpcoesBpmn {
   cores?: CoresTipos | null;
   /** Cor do texto dos rótulos quando há cores (padrão: grafite, legível sobre os fundos claros). */
   corTexto?: string;
+  /** Cor das linhas: setas, bordas da pool e das raias, anotações. Sem ela, a ferramenta usa a padrão. */
+  corLinha?: string;
+  /** Preenchimento da pool e das raias (ex.: fundo escuro no tema escuro). */
+  corFundoPiscina?: string;
   exportador?: string;
   versaoExportador?: string;
 }
@@ -154,12 +158,16 @@ export function exportarBpmn(p: Processo, opcoes: OpcoesBpmn = {}): string {
     const c = cores?.[t];
     return c ? ` color:background-color="${esc(c.fundo)}" color:border-color="${esc(c.borda)}"` : '';
   };
+  // Tema das linhas (opcional): pool, raias, setas e anotações
+  const linha = opcoes.corLinha ? ` color:border-color="${esc(opcoes.corLinha)}"` : '';
+  const fundoPiscina = opcoes.corFundoPiscina ? ` color:background-color="${esc(opcoes.corFundoPiscina)}"` : '';
+  const rotuloTema = opcoes.corLinha && opcoes.corTexto ? `<bpmndi:BPMNLabel color:color="${esc(opcoes.corTexto)}" />` : '';
   L.push('  <bpmndi:BPMNDiagram id="BPMNDiagram_1">');
   L.push('    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">');
-  L.push(`      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">${bounds(layout.piscina)}</bpmndi:BPMNShape>`);
+  L.push(`      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true"${fundoPiscina}${linha}>${bounds(layout.piscina)}${rotuloTema}</bpmndi:BPMNShape>`);
   for (const r of layout.raias) {
     const id = idRaia.get(r.nome)!;
-    L.push(`      <bpmndi:BPMNShape id="${id}_di" bpmnElement="${id}" isHorizontal="true">${bounds(r)}</bpmndi:BPMNShape>`);
+    L.push(`      <bpmndi:BPMNShape id="${id}_di" bpmnElement="${id}" isHorizontal="true"${fundoPiscina}${linha}>${bounds(r)}${rotuloTema}</bpmndi:BPMNShape>`);
   }
   for (const n of layout.nos) {
     const extra = n.tipo === 'subprocesso' ? ' isExpanded="false"' : '';
@@ -170,7 +178,7 @@ export function exportarBpmn(p: Processo, opcoes: OpcoesBpmn = {}): string {
     L.push(`      <bpmndi:BPMNShape id="${n.id}_di" bpmnElement="${n.id}"${extra}${cor(n.tipo)}>${bounds(n)}${rotulo}</bpmndi:BPMNShape>`);
   }
   for (const a of layout.anotacoes) {
-    L.push(`      <bpmndi:BPMNShape id="${a.id}_di" bpmnElement="${a.id}">${bounds(a)}</bpmndi:BPMNShape>`);
+    L.push(`      <bpmndi:BPMNShape id="${a.id}_di" bpmnElement="${a.id}"${linha}>${bounds(a)}${rotuloTema}</bpmndi:BPMNShape>`);
   }
   // Setas do layout na mesma ordem das saídas; consumidas por par origem>destino
   const filaLayout = new Map<string, LayoutCalculado['arestas']>();
@@ -181,8 +189,9 @@ export function exportarBpmn(p: Processo, opcoes: OpcoesBpmn = {}): string {
   for (const s of setas) {
     const a = filaLayout.get(`${s.origem}>${s.destino}`)?.shift();
     if (!a) continue;
-    L.push(`      <bpmndi:BPMNEdge id="${s.id}_di" bpmnElement="${s.id}">`);
+    L.push(`      <bpmndi:BPMNEdge id="${s.id}_di" bpmnElement="${s.id}"${linha}>`);
     for (const pt of a.pontos) L.push(`        <di:waypoint x="${pt.x}" y="${pt.y}" />`);
+    if (rotuloTema && s.nome) L.push(`        ${rotuloTema}`);
     L.push('      </bpmndi:BPMNEdge>');
   }
   const caixa = new Map<string, Caixa>([...layout.nos, ...layout.anotacoes].map((c) => [c.id, c]));
@@ -190,7 +199,7 @@ export function exportarBpmn(p: Processo, opcoes: OpcoesBpmn = {}): string {
     const n = caixa.get(as.nota);
     const t = caixa.get(as.alvo);
     if (!n || !t) continue;
-    L.push(`      <bpmndi:BPMNEdge id="${as.id}_di" bpmnElement="${as.id}">`);
+    L.push(`      <bpmndi:BPMNEdge id="${as.id}_di" bpmnElement="${as.id}"${linha}>`);
     L.push(`        <di:waypoint x="${Math.round(n.x + n.w / 2)}" y="${n.y + n.h}" />`);
     L.push(`        <di:waypoint x="${Math.round(t.x + t.w / 2)}" y="${t.y}" />`);
     L.push('      </bpmndi:BPMNEdge>');

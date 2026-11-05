@@ -46,7 +46,7 @@ export interface ArestaImportada {
 
 export interface GrafoImportado {
   titulo?: string;
-  raias: { id: string; nome: string; ordem: number }[];
+  raias: { id: string; nome: string; ordem: number; caixa?: CaixaImportada }[];
   nos: NoImportado[];
   arestas: ArestaImportada[];
   associacoes: { anotacao: string; alvo: string }[];

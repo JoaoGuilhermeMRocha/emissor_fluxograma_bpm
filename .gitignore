@@ -17,3 +17,8 @@ Thumbs.db
 !.vscode/extensions.json
 .idea/
 *.log
+
+# Arquivos reais de processos (dados internos — nunca versionar)
+*.fluid
+*.processo
+exported-workflow*.svg

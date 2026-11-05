@@ -50,6 +50,10 @@ export const ParecerSchema = z.object({
 export const LayoutSchema = z.object({
   /** `null` = ordem automática (primeira aparição). */
   ordemRaias: z.array(z.string()).nullable().default(null),
+  /**
+   * Posições manuais do centro de cada etapa: `x` absoluto e `y` relativo ao
+   * topo da raia (assim a etapa continua na sua raia se outras crescerem).
+   */
   posicoes: z.record(z.string(), z.object({ x: z.number(), y: z.number() })).default({}),
   estiloSeta: z.enum(['ortogonal', 'curvo']).default('ortogonal'),
 });

@@ -23,8 +23,8 @@ function grafoComRaias(): GrafoImportado {
   return {
     titulo: 'Aprovação de Solicitação',
     raias: [
-      { id: 'Lane_A', nome: 'Atendimento', ordem: 0 },
-      { id: 'Lane_B', nome: 'Área Responsável', ordem: 1 },
+      { id: 'Lane_A', nome: 'Atendimento', ordem: 0, caixa: { x: 30, y: 0, w: 1000, h: 150 } },
+      { id: 'Lane_B', nome: 'Área Responsável', ordem: 1, caixa: { x: 30, y: 150, w: 1000, h: 150 } },
       { id: 'Lane_C', nome: 'area responsavel', ordem: 2 }, // duplicada com outra grafia
     ],
     nos: [
@@ -76,7 +76,8 @@ describe('normalizarGrafo', () => {
 
   it('mantém o desenho original quando pedido', () => {
     const { processo } = normalizarGrafo(grafoComRaias(), { formato: 'bpmn', manterLayout: true, ...fixo });
-    expect(processo.layout.posicoes).toEqual({ E01: { x: 100, y: 50 }, E03: { x: 400, y: 200 } });
+    // centro; y relativo ao topo da raia (Lane_A começa em 0, Lane_B em 150)
+    expect(processo.layout.posicoes).toEqual({ E01: { x: 118, y: 68 }, E03: { x: 450, y: 90 } });
   });
 
   it('relatório: contagens, mapeamentos, perdas e avisos', () => {
