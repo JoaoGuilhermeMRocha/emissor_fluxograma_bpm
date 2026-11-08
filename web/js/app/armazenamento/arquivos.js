@@ -4,7 +4,7 @@
  * navegadores cai para download/upload comuns. A biblioteca
  * browser-fs-access cuida da diferença.
  */
-import { fileOpen, fileSave, supported } from 'browser-fs-access';
+import { directoryOpen, fileOpen, fileSave, supported } from 'browser-fs-access';
 
 /** O navegador permite gravar direto numa pasta escolhida? */
 export const suportaPastas = supported;
@@ -33,17 +33,46 @@ export async function salvarArquivo(conteudo, nome, tipo, extensao, handle) {
   }
 }
 
+/** @typedef {{ nome: string, bytes: Uint8Array, handle?: FileSystemFileHandle }} ArquivoLido */
+
 /**
- * @param {string[]} extensoes
- * @returns {Promise<{ nome: string, bytes: Uint8Array, handle?: FileSystemFileHandle } | null>}
+ * @param {File & { handle?: FileSystemFileHandle }} arquivo
+ * @returns {Promise<ArquivoLido>}
  */
-export async function abrirArquivoDoDisco(extensoes) {
+async function lerArquivo(arquivo) {
+  /** @type {ArquivoLido} */
+  const r = { nome: arquivo.name, bytes: new Uint8Array(await arquivo.arrayBuffer()) };
+  if (arquivo.handle) r.handle = arquivo.handle;
+  return r;
+}
+
+/**
+ * Escolhe um ou vários arquivos. `[]` = o usuário cancelou.
+ * @param {string[]} extensoes
+ * @returns {Promise<ArquivoLido[]>}
+ */
+export async function abrirArquivosDoDisco(extensoes) {
   try {
-    const arquivo = await fileOpen({ extensions: extensoes, description: 'Processos e fluxos' });
-    /** @type {{ nome: string, bytes: Uint8Array, handle?: FileSystemFileHandle }} */
-    const r = { nome: arquivo.name, bytes: new Uint8Array(await arquivo.arrayBuffer()) };
-    if (arquivo.handle) r.handle = arquivo.handle;
-    return r;
+    const arquivos = await fileOpen({ extensions: extensoes, description: 'Processos e fluxos', multiple: true });
+    return Promise.all(arquivos.map(lerArquivo));
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'AbortError') return [];
+    throw e;
+  }
+}
+
+/**
+ * Escolhe uma pasta e lê, com as subpastas, os arquivos com as extensões aceitas.
+ * `null` = o usuário cancelou.
+ * @param {string[]} extensoes
+ * @returns {Promise<ArquivoLido[] | null>}
+ */
+export async function abrirPastaDoDisco(extensoes) {
+  try {
+    const itens = /** @type {any[]} */ (await directoryOpen({ recursive: true }));
+    const aceito = (/** @type {string} */ nome) => extensoes.some((x) => nome.toLowerCase().endsWith(x));
+    const arquivos = itens.filter((f) => f instanceof File && aceito(f.name));
+    return Promise.all(arquivos.map(lerArquivo));
   } catch (e) {
     if (e instanceof DOMException && e.name === 'AbortError') return null;
     throw e;

@@ -61,7 +61,8 @@ import { mensagem } from '../dom.js';
  * @typedef {null
  *   | { tipo: 'biblioteca', registros: RegistroProcesso[] | null, busca: string, confirmarExclusao: string | null }
  *   | { tipo: 'importacao', dados: ImportacaoPendente, indice: number, manterLayout: boolean }
- *   | { tipo: 'conflito', dados: ConflitoPendente }} Modal
+ *   | { tipo: 'conflito', dados: ConflitoPendente }
+ *   | { tipo: 'lote', itens: import('../importacao-lote.js').ItemLote[], total: number, feitos: number }} Modal
  */
 
 /**
@@ -333,6 +334,18 @@ export async function abrirNovoNaBiblioteca(p, registro = {}) {
   await salvarAgora();
   const gravado = await gravarProcesso({ ...p, revisao: Math.max(0, p.revisao - 1) }, registro);
   carregar(gravado, registro);
+}
+
+/**
+ * Grava um processo (importado ou de arquivo) na biblioteca sem abrir, mantendo a revisão
+ * que ele já tem. Usado na importação em lote.
+ * @param {Processo} p
+ * @param {DadosRegistro} [registro]
+ * @returns {Promise<Processo>}
+ */
+export async function guardarNaBiblioteca(p, registro = {}) {
+  // gravarProcesso soma 1; desconta antes para a revisão ficar igual à do arquivo
+  return gravarProcesso({ ...p, revisao: p.revisao - 1 }, registro);
 }
 
 /** Só para testes: volta ao estado inicial, sem ouvintes. */

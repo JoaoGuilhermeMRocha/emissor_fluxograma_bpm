@@ -25,7 +25,8 @@
 .modal-rodape.coluna { flex-direction: column; align-items: stretch; }
 .comparacao { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .comparacao > div { border: 1px solid var(--borda); border-radius: var(--raio); padding: 4px 12px; }
-.resumo-importacao { grid-template-columns: repeat(4, 1fr); }
+.resumo-importacao { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 520px) { .resumo-importacao { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .biblioteca { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 58vh; overflow: auto; }
 .biblioteca li { display: flex; align-items: center; gap: 8px; border: 1px solid var(--borda); border-radius: var(--raio); padding: 4px 8px 4px 4px; }
@@ -38,3 +39,11 @@
 .selo { font-size: 11px; padding: 0 7px; border-radius: 9px; background: var(--superficie-2); border: 1px solid var(--borda); color: var(--texto-2); }
 .selo.erro { background: var(--erro-suave); color: var(--erro); border-color: transparent; }
 .selo.aviso { background: var(--aviso-suave); color: var(--aviso); border-color: transparent; }
+.selo.ok { background: var(--ok-suave); color: var(--ok); border-color: transparent; }
+/* no celular, selos e botões descem para baixo do nome em vez de espremê-lo */
+.biblioteca li { flex-wrap: wrap; }
+.biblioteca .item-principal { flex: 1 1 220px; min-width: 0; overflow-wrap: anywhere; }
+.lote li { padding-right: 8px; }
+.lote .selo, .lote .mini { flex: 0 0 auto; }
+.modal-biblioteca-topo { flex-wrap: wrap; }
+.modal-biblioteca-topo input[type="search"] { flex: 1 1 220px; min-width: 0; }

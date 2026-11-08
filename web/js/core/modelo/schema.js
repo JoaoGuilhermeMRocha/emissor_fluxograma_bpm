@@ -50,6 +50,19 @@ export const ParecerSchema = z.object({
   ressalvas: z.string().default(''),
 });
 
+const PontoSchema = z.object({ x: z.number(), y: z.number() });
+
+/**
+ * Rota de seta desenhada à mão. Coordenadas com y relativo ao topo da pool.
+ * `de` e `para` são os centros da origem e do destino quando a rota foi feita:
+ * se uma das pontas mudar de lugar, a rota deixa de valer e o layout refaz.
+ */
+export const RotaManualSchema = z.object({
+  pontos: z.array(PontoSchema).min(2),
+  de: PontoSchema,
+  para: PontoSchema,
+});
+
 export const LayoutSchema = z.object({
   /** `null` = ordem automática (primeira aparição). */
   ordemRaias: z.array(z.string()).nullable().default(null),
@@ -59,6 +72,8 @@ export const LayoutSchema = z.object({
    */
   posicoes: z.record(z.string(), z.object({ x: z.number(), y: z.number() })).default({}),
   estiloSeta: z.enum(['ortogonal', 'curvo']).default('ortogonal'),
+  /** Rotas manuais das setas, por `origem>destino` (`#2`, `#3`… quando há setas repetidas). */
+  setas: z.record(z.string(), RotaManualSchema).default({}),
 });
 
 export const ProcessoSchema = z.object({
@@ -78,7 +93,7 @@ export const ProcessoSchema = z.object({
     recomendacoes: '',
     ressalvas: '',
   }),
-  layout: LayoutSchema.default({ ordemRaias: null, posicoes: {}, estiloSeta: 'ortogonal' }),
+  layout: LayoutSchema.default({ ordemRaias: null, posicoes: {}, estiloSeta: 'ortogonal', setas: {} }),
   revisao: z.number().int().nonnegative(),
   criadoEm: z.string(),
   alteradoEm: z.string(),
@@ -89,4 +104,5 @@ export const ProcessoSchema = z.object({
 /** @typedef {z.infer<typeof RaciSchema>} Raci */
 /** @typedef {z.infer<typeof ParecerSchema>} Parecer */
 /** @typedef {z.infer<typeof LayoutSchema>} Layout */
+/** @typedef {z.infer<typeof RotaManualSchema>} RotaManual */
 /** @typedef {z.infer<typeof ProcessoSchema>} Processo */

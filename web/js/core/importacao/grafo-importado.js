@@ -49,6 +49,7 @@ export const grafoVazio = () => ({
  * @property {string} origem
  * @property {string} destino
  * @property {string} [rotulo]
+ * @property {{ x: number, y: number }[]} [pontos] Trajeto desenhado na origem (quando o formato tem).
  */
 /**
  * @typedef {Object} GrafoImportado

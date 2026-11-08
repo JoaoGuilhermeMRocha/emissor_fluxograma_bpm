@@ -135,7 +135,7 @@ export function desenharTopo(regiao, st) {
       h('span', { class: 'sep' }),
       h('button', { dataset: { clique: 'topo-biblioteca' } }, 'Biblioteca'),
       h('button', { dataset: { clique: 'topo-novo' } }, 'Novo'),
-      h('button', { title: 'Abrir .processo, BPMN, Excel ou CSV', dataset: { clique: 'topo-abrir' } }, 'Abrir…'),
+      h('button', { title: 'Abrir .processo, BPMN, Excel, CSV ou SVG do Fluid (vários de uma vez vão direto para a biblioteca)', dataset: { clique: 'topo-abrir' } }, 'Abrir…'),
       h(
         'div',
         { class: 'menu' },

@@ -12,7 +12,7 @@ import { criarProcesso, formatarIdEtapa } from '../modelo/fabrica.js';
 import { ID_ETAPA } from '../modelo/schema.js';
 import { DEFINICOES, RESULTADOS_FIM } from '../modelo/tipos.js';
 import { normalizarCampos } from '../regras/edicao.js';
-import { simplificarAtoresDeFim } from '../regras/raias.js';
+import { simplificarAtoresDeEventos } from '../regras/raias.js';
 import { chaveNome, limparTexto } from '../util/texto.js';
 import { validar } from '../validacao/validar.js';
 
@@ -265,7 +265,7 @@ export function normalizarGrafo(g, opcoes) {
   };
   if (canonica.size) processo.layout.ordemRaias = [...new Set(nomeRaia.values())];
 
-  simplificarAtoresDeFim(processo);
+  simplificarAtoresDeEventos(processo);
   if (opcoes.manterLayout) {
     // Centro da etapa; y relativo ao topo da raia de origem (só quando a raia tem coordenadas)
     const caixaRaia = new Map(g.raias.filter((r) => r.caixa).map((r) => [r.id, r.caixa]));

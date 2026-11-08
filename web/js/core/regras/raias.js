@@ -1,5 +1,5 @@
 /** @import { Etapa, Processo } from '../modelo/schema.js' */
-import { RAIA_PADRAO } from '../modelo/tipos.js';
+import { DEFINICOES, RAIA_PADRAO } from '../modelo/tipos.js';
 import { chaveNome, limparTexto } from '../util/texto.js';
 
 /**
@@ -99,15 +99,15 @@ export function ordemDasRaias(p, raias = resolverRaias(p)) {
 }
 
 /**
- * Eventos de fim: o responsável é opcional e só serve para definir a raia.
- * Remove (no próprio objeto) o responsável que coincide com a raia que o
- * evento já herdaria de quem aponta para ele.
+ * Eventos (início, intermediário, link e fim): o responsável é opcional e só
+ * serve para fixar a raia. Remove (no próprio objeto) o que coincide com a raia
+ * que o evento já herdaria, para ele continuar acompanhando a etapa vizinha.
  * @param {Processo} p
  * @returns {void}
  */
-export function simplificarAtoresDeFim(p) {
+export function simplificarAtoresDeEventos(p) {
   for (const e of p.etapas) {
-    if (e.tipo !== 'fim' || !e.ator) continue;
+    if (DEFINICOES[e.tipo].ator !== 'opcional' || !e.ator) continue;
     const ator = e.ator;
     delete e.ator;
     if (resolverRaias(p).get(e.id) !== ator) e.ator = ator;

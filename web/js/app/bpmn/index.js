@@ -7,6 +7,7 @@ import { CABECALHOS, FONTE_DIAGRAMA } from '../tema.js';
 import { instalarCabecalhos } from './cabecalhos.js';
 import { moduloMenuContexto } from './menu-contexto.js';
 import { moduloPaleta } from './paleta.js';
+import { moduloSelecao } from './selecao.js';
 import { moduloTraducao } from './traducao.js';
 
 /** Fonte dos rótulos: dentro das formas e fora delas (eventos, decisões, setas). */
@@ -22,7 +23,7 @@ const textRenderer = {
 export const opcoesEditor = (container) => ({
   container,
   textRenderer,
-  additionalModules: [moduloTraducao, moduloPaleta, moduloMenuContexto],
+  additionalModules: [moduloTraducao, moduloPaleta, moduloMenuContexto, moduloSelecao],
 });
 
 /**

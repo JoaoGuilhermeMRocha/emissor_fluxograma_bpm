@@ -8,6 +8,8 @@
 import { normalizarGrafo, relatorioEmTexto, validar } from '../../core/index.js';
 import { excluirRegistro, gravarProcesso, listarProcessos } from '../armazenamento/banco.js';
 import { atualizar, baixar, h, registrar } from '../dom.js';
+import { importarPasta } from '../acoes.js';
+import { nomeSemExtensao } from '../importacao-lote.js';
 import {
   abrirDaBiblioteca,
   abrirNovoNaBiblioteca,
@@ -72,7 +74,9 @@ let cacheImportacao = /** @type {{ chave: unknown[], resultado: ReturnType<typeo
 function resultadoImportacao(m) {
   const chave = [m.dados, m.indice, m.manterLayout];
   if (!cacheImportacao || cacheImportacao.chave.some((v, i) => v !== chave[i])) {
-    const resultado = normalizarGrafo(m.dados.grafos[m.indice], { formato: m.dados.formato, manterLayout: m.manterLayout });
+    const g = m.dados.grafos[m.indice];
+    const nome = g.titulo?.trim() ? undefined : nomeSemExtensao(m.dados.nomeArquivo);
+    const resultado = normalizarGrafo(g, { formato: m.dados.formato, manterLayout: m.manterLayout, ...(nome ? { nome } : {}) });
     cacheImportacao = { chave, resultado };
   }
   return cacheImportacao.resultado;
@@ -82,6 +86,15 @@ registrar({
   clique: {
     'modal-fechar': () => fechar(),
     'biblioteca-novo': () => void eFechar(() => novoProcesso()),
+    'biblioteca-importar-pasta': () => void importarPasta(),
+    'lote-abrir': (el) => void eFechar(() => abrirDaBiblioteca(el.dataset.registro ?? '')),
+    'lote-biblioteca': () => void abrirBiblioteca(),
+    'lote-relatorio': () => {
+      const m = estado().ui.modal;
+      if (m?.tipo !== 'lote') return;
+      const linhas = m.itens.map((i) => `${ROTULO_LOTE[i.status]}\t${i.arquivo}${i.nome ? ` → ${i.nome}` : ''}\t${i.detalhe}`);
+      baixar(linhas.join('\n') + '\n', 'relatorio-importacao-lote.txt', 'text/plain;charset=utf-8');
+    },
     'biblioteca-abrir': (el) => void eFechar(() => abrirDaBiblioteca(el.dataset.registro ?? '')),
     'biblioteca-duplicar': async (el) => {
       const r = registroDoBotao(el);
@@ -185,6 +198,7 @@ export function desenharModais(regiao, s) {
     m?.tipo === 'biblioteca' && biblioteca(m, s),
     m?.tipo === 'importacao' && importacao(m),
     m?.tipo === 'conflito' && conflito(m.dados),
+    m?.tipo === 'lote' && lote(m),
   );
   const d = regiao.querySelector('dialog');
   if (d && !d.open) d.showModal();
@@ -240,7 +254,7 @@ function biblioteca(m, s) {
     true,
     h(
       'div',
-      { class: 'linha' },
+      { class: 'linha modal-biblioteca-topo' },
       h('input', {
         type: 'search',
         value: m.busca,
@@ -249,6 +263,11 @@ function biblioteca(m, s) {
         autofocus: true,
         dataset: { digitar: 'biblioteca-busca' },
       }),
+      h(
+        'button',
+        { title: 'Importa todos os fluxos de uma pasta e das subpastas', dataset: { clique: 'biblioteca-importar-pasta' } },
+        'Importar pasta…',
+      ),
       h('button', { class: 'primario', dataset: { clique: 'biblioteca-novo' } }, '+ Novo processo'),
     ),
     h(
@@ -410,6 +429,57 @@ function conflito(c) {
       ),
       h('button', { dataset: { clique: 'conflito-navegador' } }, 'Manter o do navegador'),
       h('button', { dataset: { clique: 'conflito-os-dois' } }, 'Guardar os dois (o do arquivo vira uma cópia)'),
+    ),
+  );
+}
+
+/** @type {Record<import('../importacao-lote.js').ItemLote['status'], string>} */
+const ROTULO_LOTE = { importado: 'Importado', igual: 'Já estava', conflito: 'Conflito', erro: 'Erro' };
+const CLASSE_LOTE = { importado: 'ok', igual: '', conflito: 'aviso', erro: 'erro' };
+
+/** @param {Extract<NonNullable<Modal>, { tipo: 'lote' }>} m */
+function lote(m) {
+  const andando = m.feitos < m.total;
+  /** @param {import('../importacao-lote.js').ItemLote['status']} st */
+  const conta = (st) => m.itens.filter((i) => i.status === st).length;
+  return modal(
+    andando ? 'Importando arquivos…' : 'Importação concluída',
+    'lote',
+    true,
+    h('p', { 'aria-live': 'polite' }, andando ? `${m.feitos} de ${m.total} arquivos lidos` : `${m.total} arquivo(s) lidos.`, ' Nada que já estava na biblioteca foi alterado.'),
+    h(
+      'div',
+      { class: 'grade resumo-importacao' },
+      h('div', { class: 'dado' }, h('span', null, 'Importados'), h('strong', null, String(conta('importado')))),
+      h('div', { class: 'dado' }, h('span', null, 'Já estavam'), h('strong', null, String(conta('igual')))),
+      h('div', { class: ['dado', conta('conflito') > 0 && 'destaque'] }, h('span', null, 'Conflitos'), h('strong', null, String(conta('conflito')))),
+      h('div', { class: ['dado', conta('erro') > 0 && 'destaque'] }, h('span', null, 'Erros'), h('strong', null, String(conta('erro')))),
+    ),
+    h(
+      'ul',
+      { class: 'biblioteca lote' },
+      m.itens.map((i, n) =>
+        h(
+          'li',
+          { dataset: { chave: `lote-${n}` } },
+          h(
+            'div',
+            { class: 'item-principal' },
+            h('strong', null, i.nome ?? i.arquivo),
+            h('span', { class: 'mudo' }, i.nome ? `${i.arquivo} · ${i.detalhe}` : i.detalhe),
+          ),
+          h('span', { class: ['selo', CLASSE_LOTE[i.status]] }, ROTULO_LOTE[i.status]),
+          i.id && i.status !== 'conflito' && h('button', { class: 'mini', dataset: { clique: 'lote-abrir', registro: i.id } }, 'Abrir'),
+        ),
+      ),
+    ),
+    h(
+      'footer',
+      { class: 'modal-rodape' },
+      h('button', { disabled: andando, dataset: { clique: 'lote-relatorio' } }, 'Baixar relatório'),
+      h('span', { class: 'espaco' }),
+      h('button', { disabled: andando, dataset: { clique: 'lote-biblioteca' } }, 'Ver na biblioteca'),
+      h('button', { class: 'primario', disabled: andando, dataset: { clique: 'modal-fechar' } }, 'Fechar'),
     ),
   );
 }

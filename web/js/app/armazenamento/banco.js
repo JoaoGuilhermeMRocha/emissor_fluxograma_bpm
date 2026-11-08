@@ -20,9 +20,11 @@ import Dexie from 'dexie';
  * @property {string} atualizadoEm
  * @property {number} [revisaoExportada] Revisão gravada em arquivo pela última vez (para o aviso "alterado depois de exportar").
  * @property {ArquivoAssociado} [arquivo] Arquivo associado, quando o navegador permite reescrever (Edge/Chrome).
+ * @property {string} [origem] Impressão do arquivo de outra ferramenta que gerou o processo (hash + pool),
+ *   para a importação em lote não duplicar o que já trouxe. Continua igual se o processo for editado.
  */
 
-/** @typedef {Pick<RegistroProcesso, 'revisaoExportada' | 'arquivo'>} DadosRegistro */
+/** @typedef {Pick<RegistroProcesso, 'revisaoExportada' | 'arquivo' | 'origem'>} DadosRegistro */
 
 /**
  * @typedef {Dexie & {

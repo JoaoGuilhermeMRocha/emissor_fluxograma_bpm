@@ -17,14 +17,17 @@
  * - ligar/religar/desligar setas → saídas (ordem e destinos pendentes preservados);
  * - arrastar para outra raia → responsável; renomear raia → responsável de todas as suas etapas;
  * - arrastar dentro da raia → posição manual;
+ * - soltar ou mover anotação → posição manual da anotação;
+ * - dobrar ou rearrumar seta → rota manual (vale enquanto as pontas não mudarem de lugar);
  * - trocar o tipo (menu do editor) → tipo, com os campos ajustados.
  */
 import { proximoIdEtapa } from '../modelo/fabrica.js';
 import { DEFINICOES } from '../modelo/tipos.js';
 import { normalizarCampos, excluirEtapa } from '../regras/edicao.js';
-import { resolverRaias, simplificarAtoresDeFim } from '../regras/raias.js';
+import { resolverRaias, simplificarAtoresDeEventos } from '../regras/raias.js';
 import { limparTexto } from '../util/texto.js';
 import { FORMA_PARA_TIPO, padronizarRotulo } from '../importacao/normalizar.js';
+import { chavesDasSetas } from '../layout/layout.js';
 
 /**
  * Diferença mínima (px) para considerar que a etapa foi arrastada.
@@ -147,7 +150,7 @@ export function mesclarDoDiagrama(p, g, layoutAnterior) {
     ordem.splice(pos, 0, id);
   }
   novo.etapas = ordem.map((id) => porIdFinal.get(id));
-  simplificarAtoresDeFim(novo);
+  simplificarAtoresDeEventos(novo);
 
   // 4. Nome do processo pela pool
   if (limparTexto(g.titulo)) novo.nome = limparTexto(g.titulo);
@@ -170,6 +173,53 @@ export function mesclarDoDiagrama(p, g, layoutAnterior) {
       layoutAnterior.raias.find((r) => cy >= r.y && cy <= r.y + r.h);
     if (raia) novo.layout.posicoes[id] = { x: Math.round(cx), y: Math.round(cy - raia.y) };
   }
+
+  const topoPool = layoutAnterior.piscina.y;
+  const centroDe = (/** @type {{ x: number, y: number, w: number, h: number }} */ c) => ({ x: c.x + c.w / 2, y: c.y + c.h / 2 });
+  const relativo = (/** @type {{ x: number, y: number }} */ pt) => ({ x: Math.round(pt.x), y: Math.round(pt.y - topoPool) });
+
+  // 6. Anotações soltas ou movidas: ficam onde estão (centro; y relativo ao topo da pool)
+  const anotacaoAntes = new Map(layoutAnterior.anotacoes.map((a) => [a.id, a]));
+  for (const n of g.nos) {
+    if (n.forma !== 'anotacao' || !n.caixa) continue;
+    const id = idFinal.get(n.id);
+    const antes = anotacaoAntes.get(id);
+    const c = centroDe(n.caixa);
+    if (antes) {
+      const ca = centroDe(antes);
+      if (Math.abs(c.x - ca.x) <= TOLERANCIA_MOVIMENTO && Math.abs(c.y - ca.y) <= TOLERANCIA_MOVIMENTO) continue;
+    }
+    novo.layout.posicoes[id] = relativo(c);
+  }
+
+  // 7. Setas desenhadas à mão: guarda a rota de toda seta cujo trajeto difere do calculado
+  const caixaDe = new Map(g.nos.filter((n) => n.caixa).map((n) => [idFinal.get(n.id), n.caixa]));
+  const calculadas = new Map();
+  chavesDasSetas(layoutAnterior.arestas).forEach((k, i) => calculadas.set(k, layoutAnterior.arestas[i]));
+  const setas = g.arestas
+    .filter((a) => idFinal.has(a.origem) && idFinal.has(a.destino))
+    .map((a) => ({ ...a, origem: idFinal.get(a.origem), destino: idFinal.get(a.destino) }));
+  /** @type {Processo['layout']['setas']} */
+  const rotas = {};
+  chavesDasSetas(setas).forEach((k, i) => {
+    const a = setas[i];
+    if (!a.pontos) return;
+    const antes = calculadas.get(k);
+    const igual =
+      antes &&
+      antes.pontos.length === a.pontos.length &&
+      antes.pontos.every((pt, j) => Math.abs(pt.x - a.pontos[j].x) <= 2 && Math.abs(pt.y - a.pontos[j].y) <= 2);
+    if (igual) {
+      // não mexeu: continua manual só se já era
+      if (antes.manual && novo.layout.setas?.[k]) rotas[k] = novo.layout.setas[k];
+      return;
+    }
+    const o = caixaDe.get(a.origem);
+    const d = caixaDe.get(a.destino);
+    if (!o || !d) return;
+    rotas[k] = { pontos: a.pontos.map(relativo), de: relativo(centroDe(o)), para: relativo(centroDe(d)) };
+  });
+  novo.layout.setas = rotas;
 
   return novo;
 }

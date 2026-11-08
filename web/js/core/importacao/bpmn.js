@@ -89,12 +89,64 @@ function raiasFolha(lanes, prefixo = '') {
 }
 
 /**
+ * Anotações, associações e grupos (artefatos) de um processo ou de uma colaboração.
+ * @param {ElementoModdle[]} artefatos
+ * @param {GrafoImportado} g
+ * @param {Map<string, CaixaImportada>} caixas
+ * @param {(rotulo: string) => void} anotaIgnorado
+ */
+function lerArtefatos(artefatos, g, caixas, anotaIgnorado) {
+  for (const art of artefatos) {
+    if (art.$type === 'bpmn:TextAnnotation') {
+      /** @type {NoImportado} */
+      const no = { id: art.id, rotulo: texto(art.text), forma: 'anotacao' };
+      const caixa = caixas.get(art.id);
+      if (caixa) no.caixa = caixa;
+      g.nos.push(no);
+    } else if (art.$type === 'bpmn:Association' && art.sourceRef && art.targetRef) {
+      const [o, d] = [art.sourceRef, art.targetRef];
+      if (o.$type === 'bpmn:TextAnnotation') g.associacoes.push({ anotacao: o.id, alvo: d.id });
+      else if (d.$type === 'bpmn:TextAnnotation') g.associacoes.push({ anotacao: d.id, alvo: o.id });
+    } else if (art.$type === 'bpmn:Group') {
+      anotaIgnorado('grupo');
+    }
+  }
+}
+
+/**
+ * Artefatos gravados na colaboração (é onde o bpmn-js põe anotações criadas sobre
+ * uma pool) vão para o grafo da pool certa: a da etapa associada; senão, a pool cuja
+ * área contém a anotação; senão, a primeira.
+ * @param {ElementoModdle[]} colaboracoes
+ * @param {{ g: GrafoImportado, participante?: ElementoModdle }[]} pools
+ * @param {Map<string, CaixaImportada>} caixas
+ */
+function distribuirArtefatosDaColaboracao(colaboracoes, pools, caixas) {
+  if (!pools.length) return;
+  const artefatos = colaboracoes.flatMap((c) => c.artifacts ?? []);
+  if (!artefatos.length) return;
+  const temp = { titulo: '', raias: [], nos: [], arestas: [], associacoes: [], avisos: [], perdas: [] };
+  lerArtefatos(artefatos, temp, caixas, () => {});
+  const dentro = (c, p) => !!c && !!p && c.x + c.w / 2 >= p.x && c.x + c.w / 2 <= p.x + p.w && c.y + c.h / 2 >= p.y && c.y + c.h / 2 <= p.y + p.h;
+  for (const nota of temp.nos) {
+    const assoc = temp.associacoes.filter((a) => a.anotacao === nota.id);
+    const alvo =
+      pools.find((p) => assoc.some((a) => p.g.nos.some((n) => n.id === a.alvo))) ??
+      pools.find((p) => p.participante && dentro(nota.caixa, caixas.get(p.participante.id))) ??
+      pools[0];
+    alvo.g.nos.push(nota);
+    alvo.g.associacoes.push(...assoc);
+  }
+}
+
+/**
  * @param {ElementoModdle} processo
  * @param {string} titulo
  * @param {Map<string, CaixaImportada>} caixas
+ * @param {Map<string, { x: number, y: number }[]>} rotas trajetos das setas no diagrama
  * @returns {GrafoImportado}
  */
-function grafoDoProcesso(processo, titulo, caixas) {
+function grafoDoProcesso(processo, titulo, caixas, rotas) {
   const g = { titulo, raias: [], nos: [], arestas: [], associacoes: [], avisos: [], perdas: [] };
 
   const raiaDoNo = new Map();
@@ -142,8 +194,11 @@ function grafoDoProcesso(processo, titulo, caixas) {
       g.nos.push(no);
     } else if (el.$type === 'bpmn:SequenceFlow') {
       if (!el.sourceRef || !el.targetRef) continue;
+      /** @type {ArestaImportada} */
       const a = { id: el.id, origem: el.sourceRef.id, destino: el.targetRef.id };
       if (texto(el.name).trim()) a.rotulo = texto(el.name);
+      const pontos = rotas.get(el.id);
+      if (pontos) a.pontos = pontos;
       g.arestas.push(a);
     } else if (el.$type === 'bpmn:DataObjectReference' || el.$type === 'bpmn:DataObject') {
       if (el.$type === 'bpmn:DataObjectReference') anotaIgnorado('objeto de dados');
@@ -162,20 +217,7 @@ function grafoDoProcesso(processo, titulo, caixas) {
     );
   }
 
-  for (const art of processo.artifacts ?? []) {
-    if (art.$type === 'bpmn:TextAnnotation') {
-      const no = { id: art.id, rotulo: texto(art.text), forma: 'anotacao' };
-      const caixa = caixas.get(art.id);
-      if (caixa) no.caixa = caixa;
-      g.nos.push(no);
-    } else if (art.$type === 'bpmn:Association' && art.sourceRef && art.targetRef) {
-      const [o, d] = [art.sourceRef, art.targetRef];
-      if (o.$type === 'bpmn:TextAnnotation') g.associacoes.push({ anotacao: o.id, alvo: d.id });
-      else if (d.$type === 'bpmn:TextAnnotation') g.associacoes.push({ anotacao: d.id, alvo: o.id });
-    } else if (art.$type === 'bpmn:Group') {
-      anotaIgnorado('grupo');
-    }
-  }
+  lerArtefatos(processo.artifacts ?? [], g, caixas, anotaIgnorado);
 
   for (const [rotulo, n] of ignorados) g.perdas.push(`${n}× ${rotulo}`);
   return g;
@@ -198,11 +240,14 @@ export async function importarBpmn(xml) {
 
   // Coordenadas do diagrama
   const caixas = new Map();
+  const rotas = new Map();
   for (const diag of defs.diagrams ?? []) {
     for (const el of diag.plane?.planeElement ?? []) {
       if (el.$type === 'bpmndi:BPMNShape' && el.bpmnElement && el.bounds) {
         const b = el.bounds;
         caixas.set(el.bpmnElement.id, { x: b.x, y: b.y, w: b.width, h: b.height });
+      } else if (el.$type === 'bpmndi:BPMNEdge' && el.bpmnElement && el.waypoint?.length >= 2) {
+        rotas.set(el.bpmnElement.id, el.waypoint.map((w) => ({ x: w.x, y: w.y })));
       }
     }
   }
@@ -213,16 +258,18 @@ export async function importarBpmn(xml) {
   const participantes = colaboracoes.flatMap((c) => c.participants ?? []);
   const fluxosMensagem = colaboracoes.reduce((s, c) => s + (c.messageFlows ?? []).length, 0);
 
-  const grafos = [];
+  const pools = [];
   for (const proc of processos) {
     const part = participantes.find((p) => p.processRef?.id === proc.id);
     const titulo = texto(part?.name).trim() || texto(proc.name).trim() || proc.id || 'Processo';
-    const g = grafoDoProcesso(proc, titulo, caixas);
+    const g = grafoDoProcesso(proc, titulo, caixas, rotas);
     if (fluxosMensagem)
       g.perdas.push(`${contar(fluxosMensagem, 'fluxo de mensagem', 'fluxos de mensagem')} entre pools`);
     g.avisos.unshift(...avisosLeitura);
-    if (g.nos.length) grafos.push(g);
+    if (g.nos.length) pools.push({ g, participante: part });
   }
+  distribuirArtefatosDaColaboracao(colaboracoes, pools, caixas);
+  const grafos = pools.map((p) => p.g);
   const vazias = participantes.filter((p) => !p.processRef).length;
   if (grafos[0] && vazias)
     grafos[0].perdas.push(

@@ -28,7 +28,7 @@ export function criarProcesso(opcoes = {}) {
     etapas: [],
     raci: { atoresExtras: [], porEtapa: {}, revisada: false },
     parecer: { analista: '', data: '', status: 'Em análise', texto: '', recomendacoes: '', ressalvas: '' },
-    layout: { ordemRaias: null, posicoes: {}, estiloSeta: 'ortogonal' },
+    layout: { ordemRaias: null, posicoes: {}, estiloSeta: 'ortogonal', setas: {} },
     revisao: 0,
     criadoEm: agora.toISOString(),
     alteradoEm: agora.toISOString(),

@@ -21,11 +21,14 @@ Precisa de Node e pnpm:
 
 ```sh
 pnpm install
-pnpm test        # testes do núcleo e da loja (Vitest)
 pnpm typecheck   # checagem de tipos pelos comentários JSDoc
 pnpm vendor      # depois de atualizar dependências: regera web/vendor
 ```
 
 Não há etapa de build: o navegador carrega os módulos de `web/js` direto, e o `importmap` do `web/index.html` aponta as bibliotecas para `web/vendor`.
 
-Detalhes em [`docs/ESPECIFICACAO.md`](docs/ESPECIFICACAO.md) e [`docs/CONTEXTO_PROJETO.md`](docs/CONTEXTO_PROJETO.md).
+## Organização
+
+- `web/js/core`: o núcleo, sem tela. Modelo do processo, regras de edição e de raias, validação, análises, RACI, layout com raias, BPMN 2.0 de ida e volta, planilha (CSV/Excel) e importadores.
+- `web/js/app`: a interface. Loja de estado própria, telas redesenhadas com morphdom, editor de diagrama com bpmn-js, armazenamento no IndexedDB e importação de vários arquivos ou de uma pasta.
+- `web/vendor`: as bibliotecas do navegador já empacotadas, para rodar sem Node.

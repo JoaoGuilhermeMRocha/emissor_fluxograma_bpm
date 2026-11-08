@@ -24,7 +24,7 @@ export const DEFINICOES = {
   inicio: {
     rotulo: 'Início',
     familia: 'evento_inicio',
-    ator: 'nenhum',
+    ator: 'opcional',
     saidasMin: 1,
     saidasMax: 1,
     saidasRotuladas: false,
@@ -105,7 +105,7 @@ export const DEFINICOES = {
   intermediario: {
     rotulo: 'Evento intermediário',
     familia: 'evento_meio',
-    ator: 'nenhum',
+    ator: 'opcional',
     saidasMin: 1,
     saidasMax: 1,
     saidasRotuladas: false,
@@ -114,7 +114,7 @@ export const DEFINICOES = {
   link: {
     rotulo: 'Evento de link',
     familia: 'evento_meio',
-    ator: 'nenhum',
+    ator: 'opcional',
     saidasMin: 1,
     saidasMax: 1,
     saidasRotuladas: false,

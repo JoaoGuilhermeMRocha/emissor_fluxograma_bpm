@@ -13,7 +13,9 @@ import {
   serializarProcesso,
   slug,
 } from '../core/index.js';
-import { abrirArquivoDoDisco, salvarArquivo } from './armazenamento/arquivos.js';
+import { abrirArquivosDoDisco, abrirPastaDoDisco, salvarArquivo } from './armazenamento/arquivos.js';
+/** @import { ArquivoLido } from './armazenamento/arquivos.js' */
+import { importarLote } from './importacao-lote.js';
 import { lerRegistro } from './armazenamento/banco.js';
 import { ligarCabecalhos, opcoesVisualizador } from './bpmn/index.js';
 import { baixar, mensagem } from './dom.js';
@@ -72,16 +74,43 @@ export async function salvarComoArquivo() {
   }
 }
 
-/** Abre um `.processo` ou importa um arquivo de outra ferramenta (Ctrl+O). */
-export async function abrir() {
-  let escolhido;
+/**
+ * Leva vários arquivos para a biblioteca de uma vez, mostrando o andamento e o relatório.
+ * @param {ArquivoLido[]} arquivos
+ */
+export async function importarVarios(arquivos) {
+  definirUi({ modal: { tipo: 'lote', itens: [], total: arquivos.length, feitos: 0 } });
+  await importarLote(arquivos, (itens, feitos) => {
+    if (estado().ui.modal?.tipo === 'lote') definirUi({ modal: { tipo: 'lote', itens, total: arquivos.length, feitos } });
+  });
+}
+
+/** Escolhe uma pasta (com subpastas) e importa todos os fluxos que houver nela. */
+export async function importarPasta() {
+  let arquivos;
   try {
-    escolhido = await abrirArquivoDoDisco(EXTENSOES_ACEITAS);
+    arquivos = await abrirPastaDoDisco(EXTENSOES_ACEITAS);
   } catch (e) {
     avisar('erro', mensagem(e));
     return;
   }
-  if (!escolhido) return;
+  if (!arquivos) return;
+  if (arquivos.length === 0) return avisar('info', 'Nenhum arquivo de processo ou fluxo nessa pasta');
+  await importarVarios(arquivos);
+}
+
+/** Abre um `.processo` ou importa um arquivo de outra ferramenta (Ctrl+O). Vários de uma vez vão em lote. */
+export async function abrir() {
+  let escolhidos;
+  try {
+    escolhidos = await abrirArquivosDoDisco(EXTENSOES_ACEITAS);
+  } catch (e) {
+    avisar('erro', mensagem(e));
+    return;
+  }
+  if (escolhidos.length === 0) return;
+  if (escolhidos.length > 1) return importarVarios(escolhidos);
+  const escolhido = escolhidos[0];
   const r = await abrirArquivo(escolhido.nome, escolhido.bytes);
   if (r.tipo === 'erro') return avisar('erro', r.erro);
   if (r.tipo === 'importacao') {

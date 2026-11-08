@@ -204,9 +204,14 @@ export function montarDiagrama(conteiner) {
   ligarCabecalhos(modeler, () => estado().tema);
   const bus = /** @type {EventBus} */ (servico('eventBus'));
   // Atenção: ouvintes do eventBus não podem devolver valor, senão interrompem o evento.
+  // A sincronização espera o fim do evento: ao criar uma forma, o bpmn-js abre a edição do
+  // texto logo depois do comando. Sincronizando antes, o redesenho fecharia a caixa de texto.
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let agendada;
   bus.on('commandStack.changed', (e) => {
     if (importando || (e.trigger && e.trigger !== 'execute')) return;
-    void sincronizar();
+    clearTimeout(agendada);
+    agendada = setTimeout(() => void sincronizar(), 0);
   });
   bus.on('directEditing.deactivate', () => {
     if (!pendente) return;

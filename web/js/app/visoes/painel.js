@@ -84,7 +84,7 @@ registrar({
       });
     },
     'raias-automatico': () => mudarProcesso((q) => ({ ...q, layout: { ...q.layout, ordemRaias: null } })),
-    'posicoes-automatico': () => mudarProcesso((q) => ({ ...q, layout: { ...q.layout, posicoes: {} } })),
+    'posicoes-automatico': () => mudarProcesso((q) => ({ ...q, layout: { ...q.layout, posicoes: {}, setas: {} } })),
   },
   mudar: {
     'inspetor-tipo-novo': (el) => definirUi({ tipoNovo: /** @type {TipoEtapa} */ (/** @type {HTMLSelectElement} */ (el).value) }),
@@ -392,6 +392,7 @@ function abaRaci(p) {
 function abaProcesso(p) {
   const raias = ordemDasRaias(p);
   const manuais = Object.keys(p.layout.posicoes).length;
+  const rotasManuais = Object.keys(p.layout.setas ?? {}).length;
   /**
    * @param {string} chave
    * @param {string} rotulo
@@ -453,9 +454,15 @@ function abaProcesso(p) {
       ),
     ),
     p.layout.ordemRaias && h('button', { class: 'mini', dataset: { clique: 'raias-automatico' } }, 'Ordem automática'),
-    manuais > 0 && [
+    (manuais > 0 || rotasManuais > 0) && [
       h('h3', null, 'Layout'),
-      h('p', { class: 'nota' }, `${manuais} etapa(s) com posição definida à mão.`),
+      h(
+        'p',
+        { class: 'nota' },
+        [manuais && `${manuais} forma(s) com posição definida à mão`, rotasManuais && `${rotasManuais} seta(s) com rota desenhada à mão`]
+          .filter(Boolean)
+          .join(' e ') + '.',
+      ),
       h('button', { class: 'mini', dataset: { clique: 'posicoes-automatico' } }, 'Reorganizar automaticamente'),
     ],
   );

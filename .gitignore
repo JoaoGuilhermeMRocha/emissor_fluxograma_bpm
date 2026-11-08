@@ -26,3 +26,7 @@ exported-workflow*.svg
 # Python (uv)
 .venv/
 __pycache__/
+
+# Documentação interna e testes (ficam só na máquina)
+docs/
+test/

@@ -163,6 +163,10 @@ export function excluirEtapa(p, id) {
     });
   delete novo.raci.porEtapa[id];
   delete novo.layout.posicoes[id];
+  for (const k of Object.keys(novo.layout.setas ?? {})) {
+    const [origem, destino] = k.replace(/#\d+$/, '').split('>');
+    if (origem === id || destino === id) delete novo.layout.setas[k];
+  }
   return novo;
 }
 

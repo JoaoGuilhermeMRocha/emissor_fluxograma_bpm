@@ -34,6 +34,25 @@ export const MEDIDAS = {
   faixaAnotacoes: 90,
 };
 
+/** Diferença máxima (px) para considerar que uma ponta de seta continua no mesmo lugar. */
+const TOLERANCIA_ROTA = 4;
+
+/**
+ * Chave de cada seta (`origem>destino`, com `#2`, `#3`… para setas repetidas entre as mesmas
+ * etapas), na ordem recebida. É como as rotas manuais ficam guardadas em `layout.setas`.
+ * @param {{ origem: string, destino: string }[]} setas
+ * @returns {string[]}
+ */
+export function chavesDasSetas(setas) {
+  const vistas = new Map();
+  return setas.map((s) => {
+    const base = `${s.origem}>${s.destino}`;
+    const n = (vistas.get(base) ?? 0) + 1;
+    vistas.set(base, n);
+    return n === 1 ? base : `${base}#${n}`;
+  });
+}
+
 /**
  * @param {TipoEtapa} tipo
  * @returns {{ w: number; h: number }}
@@ -108,7 +127,8 @@ export function calcularLayout(p) {
     return max;
   });
   const anotacoesEtapas = p.etapas.filter((e) => e.tipo === 'anotacao');
-  const topo = anotacoesEtapas.length ? MEDIDAS.faixaAnotacoes : 0;
+  // A faixa acima da pool só existe para anotações sem posição definida à mão
+  const topo = anotacoesEtapas.some((e) => !p.layout.posicoes[e.id]) ? MEDIDAS.faixaAnotacoes : 0;
   const xConteudo = MEDIDAS.cabecalhoPiscina + MEDIDAS.cabecalhoRaia + MEDIDAS.margemConteudo;
   const largura = xConteudo + (maxColuna + 1) * MEDIDAS.coluna;
 
@@ -178,6 +198,7 @@ export function calcularLayout(p) {
 
   const vao = MEDIDAS.coluna - MEDIDAS.atividade.w;
   const canalUsado = new Map();
+  /** @type {ArestaPosicionada[]} */
   const arestas = g.arestas.map((a) => {
     const o = no.get(a.origem);
     const d = no.get(a.destino);
@@ -298,18 +319,52 @@ export function calcularLayout(p) {
     };
   });
 
+  // Rotas desenhadas à mão (y relativo ao topo da pool). Se as duas pontas se deslocaram
+  // juntas (ex.: uma etapa nova empurrou as colunas), a rota vai junto; se uma ponta se
+  // moveu em relação à outra, a rota não serve mais e fica a calculada.
+  chavesDasSetas(arestas).forEach((chave, i) => {
+    const rota = p.layout.setas?.[chave];
+    if (!rota) return;
+    const a = arestas[i];
+    const co = centro(no.get(a.origem));
+    const cd = centro(no.get(a.destino));
+    const dx = co.x - rota.de.x;
+    const dy = co.y - (rota.de.y + piscina.y);
+    const juntas =
+      Math.abs(cd.x - rota.para.x - dx) <= TOLERANCIA_ROTA &&
+      Math.abs(cd.y - (rota.para.y + piscina.y) - dy) <= TOLERANCIA_ROTA;
+    if (!juntas) return;
+    arestas[i] = {
+      ...a,
+      pontos: rota.pontos.map((pt) => ({ x: Math.round(pt.x + dx), y: Math.round(pt.y + piscina.y + dy) })),
+      manual: true,
+    };
+  });
+
   // Anotações na faixa acima da piscina, perto da etapa ligada
   let xLivre = 0;
   const anotacoes = anotacoesEtapas
     .map((e) => ({ e, alvo: e.anotaEtapa ? no.get(e.anotaEtapa) : undefined }))
     .sort((a, b) => (a.alvo?.x ?? Infinity) - (b.alvo?.x ?? Infinity))
     .map(({ e, alvo }) => {
+      // Posição à mão: centro, com y relativo ao topo da pool
+      const manual = p.layout.posicoes[e.id];
+      if (manual) {
+        const caixa = {
+          id: e.id,
+          x: Math.round(manual.x - MEDIDAS.anotacao.w / 2),
+          y: Math.round(piscina.y + manual.y - MEDIDAS.anotacao.h / 2),
+          w: MEDIDAS.anotacao.w,
+          h: MEDIDAS.anotacao.h,
+        };
+        return alvo ? { ...caixa, alvo: alvo.id } : caixa;
+      }
       const x = Math.max(xLivre, alvo ? alvo.x : xLivre);
       xLivre = x + MEDIDAS.anotacao.w + 15;
       const caixa = { id: e.id, x, y: 15, w: MEDIDAS.anotacao.w, h: MEDIDAS.anotacao.h };
       return alvo ? { ...caixa, alvo: alvo.id } : caixa;
     });
-  const larguraFinal = Math.max(largura, xLivre);
+  const larguraFinal = Math.max(largura, xLivre, ...anotacoes.map((a) => a.x + a.w + 15));
 
   return {
     piscina: { ...piscina, w: larguraFinal },
@@ -350,6 +405,7 @@ export function calcularLayout(p) {
  * @typedef {Object} ArestaPosicionadaPropria
  * @property {Ponto[]} pontos
  * @property {boolean} retorno
+ * @property {boolean} [manual] A rota veio de `layout.setas` (desenhada à mão).
  */
 /**
  * @typedef {Object} LayoutCalculado
