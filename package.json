@@ -1,12 +1,29 @@
 {
   "name": "mapeador-processos",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
+  "description": "Mapeador de Processos: HTML, CSS e JS puros no navegador. O Node só instala dependências, prepara a pasta web/vendor e roda os testes.",
   "scripts": {
-    "test": "pnpm -r test",
-    "typecheck": "pnpm -r typecheck",
-    "bancada": "pnpm --filter @mapeador/bancada dev",
-    "web": "pnpm --filter @mapeador/web dev",
-    "build": "pnpm --filter @mapeador/web build"
+    "vendor": "node scripts/vendor.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p jsconfig.json"
+  },
+  "dependencies": {
+    "bpmn-js": "^18.31.1",
+    "bpmn-moddle": "^10.3.1",
+    "browser-fs-access": "^0.38.0",
+    "dexie": "^4.4.7",
+    "fflate": "^0.8.3",
+    "morphdom": "^2.7.7",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.27.0",
+    "fake-indexeddb": "^6.2.7",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   }
 }

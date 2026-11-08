@@ -1,0 +1,9 @@
+{
+  "bpmn-js": "18.31.1",
+  "bpmn-moddle": "10.3.1",
+  "zod": "4.6.7",
+  "fflate": "0.8.3",
+  "dexie": "4.4.7",
+  "browser-fs-access": "0.38.0",
+  "morphdom": "2.7.8"
+}

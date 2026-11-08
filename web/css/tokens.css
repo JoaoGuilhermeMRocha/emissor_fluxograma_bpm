@@ -1,0 +1,64 @@
+/* Mapeador de Processos — tokens de cor e forma (a marca configurável do §15 vai sobrescrever estes valores) */
+/*
+ * Tema escuro é o padrão; o claro fica em [data-tema="claro"] (botão no topo).
+ * Os arquivos exportados (BPMN, SVG) sempre saem no tema claro.
+ */
+:root {
+  --primaria: #4c8dff;
+  --primaria-escura: #3b7bf0;
+  --primaria-texto: #ffffff;
+  --primaria-suave: rgba(76, 141, 255, 0.14);
+  --fundo: #0e1116;
+  --superficie: #161a21;
+  --superficie-2: #1c212a;
+  --superficie-campo: #12161c;
+  --canvas: #11151b;
+  --borda: #272e39;
+  --borda-forte: #363f4c;
+  --texto: #e6e9ee;
+  --texto-2: #b3bbc7;
+  --mudo: #8892a0;
+  --placeholder: #5f6977;
+  --erro: #f87171;
+  --erro-suave: rgba(248, 113, 113, 0.14);
+  --aviso: #fbbf24;
+  --aviso-suave: rgba(251, 191, 36, 0.13);
+  --info: #6ea2ff;
+  --info-suave: rgba(110, 162, 255, 0.13);
+  --ok: #4ade80;
+  --ok-suave: rgba(74, 222, 128, 0.12);
+  --notificacao: #262d38;
+  --raio: 8px;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --sombra-alta: 0 16px 40px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+:root[data-tema="claro"] {
+  --primaria: #2563eb;
+  --primaria-escura: #1d4ed8;
+  --primaria-suave: #eff4ff;
+  --fundo: #f4f5f7;
+  --superficie: #ffffff;
+  --superficie-2: #f8f9fb;
+  --superficie-campo: #ffffff;
+  --canvas: #ffffff;
+  --borda: #e2e5ea;
+  --borda-forte: #cdd2da;
+  --texto: #1c2430;
+  --texto-2: #4a5565;
+  --mudo: #6b7584;
+  --placeholder: #9aa3af;
+  --erro: #c62828;
+  --erro-suave: #fdecec;
+  --aviso: #b45309;
+  --aviso-suave: #fff6e5;
+  --info: #2563eb;
+  --info-suave: #eff4ff;
+  --ok: #15803d;
+  --ok-suave: #ecfdf3;
+  --notificacao: #1f2937;
+  --sombra: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --sombra-alta: 0 12px 32px rgba(16, 24, 40, 0.18);
+  color-scheme: light;
+}

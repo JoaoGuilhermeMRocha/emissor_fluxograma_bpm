@@ -1,3 +1,4 @@
-packages:
-  - "packages/*"
-  - "apps/*"
+# Pacote único (sem workspace). Este arquivo só guarda configurações do pnpm.
+# O esbuild funciona pelo binário da plataforma; o script de instalação dele é dispensável.
+allowBuilds:
+  esbuild: false

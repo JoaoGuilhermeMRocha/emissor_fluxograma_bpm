@@ -8,7 +8,7 @@ coverage/
 *.tsbuildinfo
 
 # Configuração de marca interna (só a genérica vai para o repositório)
-apps/web/public/config/marca.local.json
+web/config/marca.local.json
 
 # Sistema e editores
 .DS_Store
@@ -22,3 +22,7 @@ Thumbs.db
 *.fluid
 *.processo
 exported-workflow*.svg
+
+# Python (uv)
+.venv/
+__pycache__/

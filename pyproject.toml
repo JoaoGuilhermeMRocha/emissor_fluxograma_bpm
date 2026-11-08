@@ -1,0 +1,10 @@
+[project]
+name = "mapeador-processos"
+version = "0.2.0"
+description = "Servidor local do Mapeador de Processos (serve a pasta web/)."
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.uv]
+# Não é um pacote Python: o uv só precisa do interpretador para rodar o server.py
+package = false

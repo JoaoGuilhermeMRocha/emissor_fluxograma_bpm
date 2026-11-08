@@ -1,0 +1,15 @@
+/* Telas menores (carregado por último: sobrescreve as outras folhas) */
+
+@media (max-width: 1180px) {
+  .area { grid-template-columns: minmax(0, 1fr) 320px; }
+  .marca-nome, .estado-salvamento { display: none; }
+}
+@media (max-width: 860px) {
+  .app { height: auto; min-height: 100%; }
+  .area { grid-template-columns: minmax(0, 1fr); } /* a tabela rola dentro da gaveta, sem alargar a página */
+  .centro { grid-template-rows: 60vh auto; }
+  .lateral { border-left: 0; border-top: 1px solid var(--borda); }
+  .topo { flex-wrap: wrap; }
+  .acoes { flex-wrap: wrap; }
+  .indicadores { display: none; }
+}

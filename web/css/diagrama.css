@@ -1,0 +1,109 @@
+/* Diagrama: editor bpmn-js, ferramentas e indicadores */
+
+/* Editor bpmn-js no tema escuro: paleta, menu de contexto, menus e edição de rótulo */
+:root:not([data-tema="claro"]) .editor-diagrama .bio-theme-parent,
+:root:not([data-tema="claro"]) .editor-diagrama .djs-parent {
+  --bio-surface: var(--superficie);
+  --bio-surface-overlay: var(--superficie-2);
+  --bio-surface-subtle: var(--superficie-2);
+  --bio-surface-medium: #262d38;
+  --bio-surface-inverted: #e6e9ee;
+  --bio-surface-inverted-subtle: #b3bbc7;
+  --bio-text: var(--texto);
+  --bio-text-subtle: var(--texto-2);
+  --bio-text-subtlest: var(--mudo);
+  --bio-text-on-inverted: #11151b;
+  --bio-border: var(--borda-forte);
+  --bio-border-disabled: var(--borda);
+  --bio-primary: var(--primaria);
+  --bio-primary-surface: var(--primaria-suave);
+  --bio-focus: var(--primaria);
+  --bio-focus-surface: var(--primaria-suave);
+  --bio-canvas-accent: #6ea2ff;
+  --bio-canvas-accent-subtle: #3a5f9e;
+  --bio-shadow: rgba(0, 0, 0, 0.6);
+  --bio-shadow-subtle: rgba(0, 0, 0, 0.35);
+  --canvas-fill-color: var(--canvas);
+}
+:root:not([data-tema="claro"]) .editor-diagrama .djs-direct-editing-parent {
+  background: var(--superficie-2) !important;
+  color: var(--texto) !important;
+}
+:root:not([data-tema="claro"]) .editor-diagrama .bjs-powered-by svg path,
+:root:not([data-tema="claro"]) .editor-diagrama .bjs-powered-by svg { fill: #6b7584; }
+
+/* Diagrama */
+.quadro-diagrama { position: relative; min-height: 0; background: var(--canvas); overflow: hidden; }
+.editor-diagrama { position: absolute; inset: 0; }
+.ferramentas-diagrama {
+  position: absolute; top: 12px; left: 192px; z-index: 10; display: flex; gap: 4px; align-items: center;
+  background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 4px; box-shadow: var(--sombra);
+}
+.ferramentas-diagrama button { border-color: transparent; }
+.indicadores {
+  position: absolute; top: 12px; right: 12px; z-index: 10; display: flex; gap: 6px; align-items: center;
+  background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 4px 4px 4px 10px; box-shadow: var(--sombra);
+  font-size: 12.5px; color: var(--texto-2);
+}
+.indicadores > span + span::before { content: "·"; margin-right: 6px; color: var(--borda-forte); }
+.chip { border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 600; border: 0; }
+.chip.ok { background: var(--ok-suave); color: var(--ok); }
+.chip.aviso { background: var(--aviso-suave); color: var(--aviso); }
+.chip.erro { background: var(--erro-suave); color: var(--erro); }
+/* ---------- Paleta "Formas" (estilo Bizagi): ícone + nome, por grupo ---------- */
+.editor-diagrama .djs-palette {
+  top: 12px !important; left: 12px !important; width: 168px !important;
+  max-height: calc(100% - 24px); overflow-y: auto;
+  background: var(--superficie); border: 1px solid var(--borda) !important; border-radius: var(--raio) !important;
+  box-shadow: var(--sombra); padding: 0 0 6px;
+}
+.editor-diagrama .djs-palette .djs-palette-toggle { display: none; }
+.editor-diagrama .djs-palette-entries::before {
+  content: "Formas"; display: block; padding: 8px 12px 6px; border-bottom: 1px solid var(--borda);
+  font: 650 11.5px/1.2 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; color: var(--mudo);
+}
+.editor-diagrama .djs-palette .group { display: flex; flex-direction: column; padding: 2px 6px; }
+.editor-diagrama .djs-palette .group[data-group]::before {
+  display: block; padding: 8px 6px 3px;
+  font: 650 10.5px/1.2 system-ui, sans-serif; letter-spacing: .05em; text-transform: uppercase; color: var(--mudo);
+}
+.editor-diagrama .djs-palette .group[data-group="atividades"]::before { content: "Atividades"; }
+.editor-diagrama .djs-palette .group[data-group="eventos"]::before { content: "Eventos"; }
+.editor-diagrama .djs-palette .group[data-group="decisoes"]::before { content: "Decisões"; }
+.editor-diagrama .djs-palette .group[data-group="artefatos"]::before { content: "Artefatos"; }
+.editor-diagrama .djs-palette .entry {
+  float: none; display: flex; align-items: center; gap: 8px;
+  width: auto; height: 30px; line-height: 30px; padding: 0 6px; border-radius: 6px;
+  font-size: 22px; text-align: left; color: var(--texto); cursor: grab;
+}
+.editor-diagrama .djs-palette .entry::before { width: 24px; text-align: center; flex: 0 0 auto; }
+.editor-diagrama .djs-palette .entry:hover { background: var(--primaria-suave); color: var(--texto); }
+.editor-diagrama .djs-palette .entry .rotulo { font: 13px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; }
+/* Ferramentas: uma linha de ícones no topo */
+.editor-diagrama .djs-palette .group[data-group="ferramentas"] {
+  flex-direction: row; justify-content: space-between; padding: 6px 8px; border-bottom: 1px solid var(--borda);
+}
+.editor-diagrama .djs-palette .group[data-group="ferramentas"] .entry {
+  width: 32px; height: 32px; padding: 0; justify-content: center; font-size: 22px; cursor: pointer;
+}
+.editor-diagrama .djs-palette .group[data-group="ferramentas"] .entry::before { width: auto; }
+.editor-diagrama .djs-palette .highlighted-entry { background: var(--primaria-suave); color: var(--primaria) !important; }
+
+/* ---------- Ações da forma selecionada (estilo Bizagi): painel com grupos ---------- */
+.editor-diagrama .djs-context-pad.open {
+  display: flex; flex-direction: column; gap: 4px; width: auto; padding: 5px;
+  background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); box-shadow: var(--sombra-alta);
+  pointer-events: all;
+}
+.editor-diagrama .djs-context-pad .group { display: flex; flex-wrap: wrap; gap: 2px; max-width: 160px; }
+.editor-diagrama .djs-context-pad .group + .group { border-top: 1px solid var(--borda); padding-top: 4px; }
+.editor-diagrama .djs-context-pad .entry {
+  width: 30px; height: 30px; margin: 0; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 22px; border-radius: 6px; color: var(--texto); background: transparent; box-shadow: none;
+}
+.editor-diagrama .djs-context-pad .entry:hover { background: var(--primaria-suave); color: var(--primaria); }
+.editor-diagrama .djs-context-pad .entry[data-action="delete"]:hover { background: var(--erro-suave); color: var(--erro); }
+
+.bjs-powered-by { opacity: .55; }
+.editor-diagrama :focus { outline: none; }
+.editor-diagrama :focus-visible { outline: 2px solid var(--primaria); outline-offset: -2px; }

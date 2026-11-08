@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Mapeie processos como uma lista de etapas e gere fluxograma BPMN, matriz RACI e análises. Funciona offline; os dados ficam no seu navegador."
+    />
+    <title>Mapeador de Processos</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563EB'/%3E%3Ccircle cx='8' cy='16' r='3.2' fill='white'/%3E%3Crect x='13' y='12' width='8' height='8' rx='2' fill='white'/%3E%3Cpath d='M24 16l3-3 3 3-3 3z' fill='white'/%3E%3Cpath d='M11 16h2M21 16h3' stroke='white' stroke-width='1.6'/%3E%3C/svg%3E"
+    />
+
+    <!-- Tema antes de pintar a tela, para não piscar no tema errado -->
+    <script>
+      try {
+        if (localStorage.getItem('mapeador-tema') === 'claro') document.documentElement.dataset.tema = 'claro';
+      } catch {}
+    </script>
+
+    <!-- Bibliotecas de terceiros (pasta vendor, gerada por `pnpm vendor`) -->
+    <link rel="stylesheet" href="vendor/bpmn-js/diagram-js.css" />
+    <link rel="stylesheet" href="vendor/bpmn-js/bpmn-js.css" />
+    <link rel="stylesheet" href="vendor/bpmn-js/bpmn-embedded.css" />
+
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/diagrama.css" />
+    <link rel="stylesheet" href="css/paineis.css" />
+    <link rel="stylesheet" href="css/sobreposicoes.css" />
+    <link rel="stylesheet" href="css/responsivo.css" />
+
+    <script type="importmap">
+      {
+        "imports": {
+          "bpmn-js/lib/Modeler": "./vendor/bpmn-modeler.js",
+          "bpmn-js/lib/Viewer": "./vendor/bpmn-viewer.js",
+          "bpmn-moddle": "./vendor/bpmn-moddle.js",
+          "browser-fs-access": "./vendor/browser-fs-access.js",
+          "dexie": "./vendor/dexie.js",
+          "fflate": "./vendor/fflate.js",
+          "morphdom": "./vendor/morphdom.js",
+          "zod": "./vendor/zod.js"
+        }
+      }
+    </script>
+    <script type="module" src="js/app/main.js"></script>
+  </head>
+  <body>
+    <div id="raiz">
+      <div class="tela-cheia" id="carregando">
+        <p class="mudo">Carregando…</p>
+        <noscript><p>O Mapeador precisa de JavaScript para funcionar.</p></noscript>
+      </div>
+
+      <div class="app" id="app" hidden>
+        <header class="topo" id="topo"></header>
+
+        <main class="area">
+          <section class="centro">
+            <div class="quadro-diagrama">
+              <div class="ferramentas-diagrama" role="toolbar" aria-label="Diagrama">
+                <button data-clique="diagrama-adicionar" title="Acrescenta uma tarefa depois da etapa selecionada">
+                  + Etapa
+                </button>
+                <span class="sep"></span>
+                <button class="icone" data-clique="diagrama-ajustar" title="Ajustar à tela" aria-label="Ajustar à tela">⤢</button>
+                <button class="icone" data-clique="diagrama-zoom" data-fator="1.2" title="Aproximar" aria-label="Aproximar">+</button>
+                <button class="icone" data-clique="diagrama-zoom" data-fator="0.8333" title="Afastar" aria-label="Afastar">−</button>
+              </div>
+              <div class="indicadores" id="indicadores" aria-label="Resumo"></div>
+              <div class="editor-diagrama" id="editor-diagrama" aria-label="Editor do diagrama"></div>
+            </div>
+            <section class="gaveta aberta" id="gaveta" aria-label="Tabela de etapas"></section>
+          </section>
+
+          <aside class="lateral" id="lateral" aria-label="Painel lateral"></aside>
+        </main>
+
+        <div class="notificacoes" id="notificacoes" role="status" aria-live="polite"></div>
+        <div id="modais"></div>
+      </div>
+    </div>
+  </body>
+</html>
